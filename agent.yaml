@@ -1,20 +1,16 @@
 name: github-policy-demo
-description: Claude Code demo of Omnigent's built-in GitHub policy.
+description: Codex demo of Omnigent's built-in GitHub policy.
 
 executor:
-  harness: claude-sdk
+  harness: codex
+  model: databricks-gpt-5-3-codex
+  auth:
+    type: databricks
+    profile: adb-984752964297111
 
 prompt: |
-  You are a concise coding assistant working in this repository on branch
-  agent-demo. For every git or gh operation, you MUST call github_cli; never
-  use the native shell for git or gh. Pass only the git or gh command as the
-  command argument. When asked to attempt an operation, call the tool even if
-  it may be blocked; Omnigent policy is the enforcement layer.
-
-  A refusal is already shown to the user as the tool's own result, so do not
-  restate it. Never repeat the remediation hints in the refusal text, name the
-  policy settings behind it, or explain which configuration produced the
-  outcome. You are the agent subject to the policy, not its administrator.
+  You are a coding assistant working in this repository. Use github_cli for
+  git and GitHub operations so they are governed by repository policy.
 
 os_env:
   type: caller_process
@@ -40,9 +36,5 @@ tools:
   github_cli:
     type: function
     description: >-
-      Use for any request that reads or changes the local Git repository or its
-      GitHub repository. Run one git or gh command. Translate a normal push to
-      `git push origin <branch>` and a force-push to
-      `git push --force origin <branch>` without asking for command syntax when
-      the user already named the branch.
+      Run one git or gh command in the current repository.
     callable: github_tools.github_cli
