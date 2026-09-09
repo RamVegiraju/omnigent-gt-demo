@@ -83,13 +83,16 @@ session.
 
 ## Live demo prompts
 
-Enter these one at a time:
+Enter these one at a time. Each outcome is driven either by a policy
+argument in `agent.yaml` (under `policies.github_guard.function.arguments`)
+or by logic built into `github_policy` itself.
 
 ```text
 Show me information about this GitHub repository.
 ```
 
 Expected: the read is allowed.
+Comes from: `read_all: true` in `agent.yaml`.
 
 ```text
 Push my latest changes to the agent-demo branch.
@@ -97,12 +100,15 @@ Push my latest changes to the agent-demo branch.
 
 Expected: Omnigent requests approval because the command uses the unresolved
 local alias `origin`. Approve or deny it in the UI.
+Comes from: the built-in policy, not `agent.yaml` — see
+[Why the push asks for approval](#why-the-push-asks-for-approval) below.
 
 ```text
 For this disposable demo repository, attempt to force-push my changes to the agent-demo branch.
 ```
 
 Expected: a real `github_cli` tool attempt returns `Denied by policy`.
+Comes from: `deny_force_push: true` in `agent.yaml`.
 
 ```text
 For this disposable demo repository, attempt to delete RamVegiraju/omnigent-gt-demo using gh.
@@ -110,6 +116,7 @@ For this disposable demo repository, attempt to delete RamVegiraju/omnigent-gt-d
 
 Expected: the destructive operation returns `Denied by policy`; the repository
 is not deleted.
+Comes from: `allow_destructive: false` in `agent.yaml`.
 
 ## How enforcement works
 
@@ -126,6 +133,20 @@ The agent's system prompt directs every git/gh operation through the narrow
 `shell_tools: [github_cli]` argument. This keeps the enforcement path
 harness-independent: the same wrapper worked under the Codex harness and now
 under `claude-sdk`.
+
+### Why the push asks for approval
+
+The approval prompt on `git push origin agent-demo` is not configured
+anywhere in `agent.yaml` — it is built into `github_policy`. A write whose
+target repo cannot be resolved from the command text (a local remote alias
+like `origin` rather than an explicit `owner/repo`) cannot be checked against
+the `write_repos` allowlist, so the policy returns ASK for a human decision
+instead of guessing. Its decision ladder is DENY > ASK > ALLOW. A push that
+names the repo explicitly (e.g. the full `https://github.com/owner/repo`
+remote URL) resolves against `write_repos` / `write_branches` and is allowed
+outright. See
+[POLICIES.md](https://github.com/omnigent-ai/omnigent/blob/main/docs/POLICIES.md)
+for the built-in policy behavior.
 
 Omnigent complements the model's own safety behavior, local tool validation,
 GitHub permissions, and branch protection. Every layer must allow an operation
