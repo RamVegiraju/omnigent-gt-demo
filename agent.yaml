@@ -3,10 +3,6 @@ description: Codex demo of Omnigent's built-in GitHub policy.
 
 executor:
   harness: codex
-  model: databricks-gpt-5-3-codex
-  auth:
-    type: databricks
-    profile: adb-984752964297111
 
 prompt: |
   You are a concise coding assistant working in this repository on branch
@@ -47,5 +43,9 @@ tools:
   github_cli:
     type: function
     description: >-
-      Run one git or gh command in the current repository.
+      Use for any request that reads or changes the local Git repository or its
+      GitHub repository. Run one git or gh command. Translate a normal push to
+      `git push origin <branch>` and a force-push to
+      `git push --force origin <branch>` without asking for command syntax when
+      the user already named the branch.
     callable: github_tools.github_cli
