@@ -1,12 +1,8 @@
 name: github-policy-demo
-description: Codex demo of Omnigent's built-in GitHub policy.
+description: Claude Code demo of Omnigent's built-in GitHub policy.
 
 executor:
-  harness: codex
-  model: databricks-gpt-5-3-codex
-  auth:
-    type: databricks
-    profile: adb-984752964297111
+  harness: claude-sdk
 
 prompt: |
   You are a concise coding assistant working in this repository on branch
