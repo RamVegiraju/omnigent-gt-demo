@@ -95,13 +95,17 @@ Expected: the read is allowed.
 Comes from: `read_all: true` in `agent.yaml`.
 
 ```text
-Push my latest changes to the agent-demo branch.
+Add a timestamped line to demo.py, commit it, and push to the agent-demo branch.
 ```
 
-Expected: Omnigent requests approval because the command uses the unresolved
-local alias `origin`. Approve or deny it in the UI.
+Expected: the agent edits the file and commits locally without friction, then
+the push triggers an approval request because the command uses the unresolved
+local alias `origin`. Approve it in the UI and a brand-new commit appears on
+GitHub; deny it and the commit stays local only.
 Comes from: the built-in policy, not `agent.yaml` — see
 [Why the push asks for approval](#why-the-push-asks-for-approval) below.
+(Local-only operations like editing and committing never reach GitHub, so the
+policy has nothing to gate until the push.)
 
 ```text
 For this disposable demo repository, attempt to force-push my changes to the agent-demo branch.
