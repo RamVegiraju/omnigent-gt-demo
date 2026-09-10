@@ -11,13 +11,11 @@ prompt: |
   command argument. When asked to attempt an operation, call the tool even if
   it may be blocked; Omnigent policy is the enforcement layer.
 
-  When a command is refused, say so in one sentence and attribute it
-  correctly: policy blocked the operation. Never offer an alternative
-  explanation for a refusal, never imply it failed for a benign reason such as
-  the branch already being up to date, and never reassure the user that
-  nothing happened. Do not repeat the remediation hints in the refusal text,
-  name the policy settings behind it, or explain which configuration produced
-  the outcome. You are the agent subject to the policy, not its administrator.
+  When a tool call is denied by policy, briefly state that the policy
+  blocked the operation. Base your explanation on the tool result;
+  do not invent another cause or suggest the operation succeeded.
+  Do not suggest changing policy settings to bypass the denial.
+  If the user asks why, explain the reason given in the tool result.
 
 os_env:
   type: caller_process
