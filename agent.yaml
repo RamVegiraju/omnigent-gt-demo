@@ -25,6 +25,13 @@ os_env:
     type: none
 
 policies:
+  session_cost_budget:
+    type: function
+    function:
+      path: omnigent.policies.builtins.cost.cost_budget
+      arguments:
+        ask_thresholds_usd: [0.10]
+        max_cost_usd: 5.0
   github_guard:
     type: function
     function:

@@ -13,6 +13,7 @@ it executes.
 - Branch writes are restricted to `agent-demo`.
 - Commands with an unresolved remote such as `origin` request human approval.
 - Force pushes, tag pushes, and destructive operations are denied.
+- Session spend requests approval after crossing $0.10, with a $5.00 hard cap.
 
 The policy itself is built into Omnigent (see
 [POLICIES.md](https://github.com/omnigent-ai/omnigent/blob/main/docs/POLICIES.md)):
@@ -20,6 +21,20 @@ The policy itself is built into Omnigent (see
 ```yaml
 path: omnigent.policies.builtins.github.github_policy
 ```
+
+The session cost guard is another built-in policy:
+
+```yaml
+path: omnigent.policies.builtins.cost.cost_budget
+arguments:
+  ask_thresholds_usd: [0.10]
+  max_cost_usd: 5.0
+```
+
+Omnigent calculates this session cost from the token usage reported by Codex
+and the pricing associated with `databricks-gpt-6-sol`. It is a runtime cost
+estimate for policy enforcement, not a Databricks invoice or system-table
+billing query.
 
 `github_tools.py` is only the local execution surface. Policy decisions remain
 inside Omnigent.
@@ -106,9 +121,46 @@ Open <http://localhost:6767> again and create a fresh demo session.
 
 ## Live demo prompts
 
-Enter these one at a time. Each outcome is driven either by a policy
-argument in `agent.yaml` (under `policies.github_guard.function.arguments`)
-or by logic built into `github_policy` itself.
+After starting the agent, open <http://localhost:6767>, select
+`github-policy-demo`, and create a fresh session. Everything in the text boxes
+below is natural language to paste into the Omnigent chat UI, not a terminal
+command.
+
+### Copy/paste presenter script
+
+1. Paste this to show an allowed GitHub read:
+
+   ```text
+   Show me information about this GitHub repository.
+   ```
+
+2. Paste this to create and push a real commit:
+
+   ```text
+   Add a timestamped comment to demo.py, commit it, and push it to the agent-demo branch.
+   ```
+
+   If Omnigent shows the **session cost** warning, approve it once so the model
+   can continue. When Omnigent later shows the separate **GitHub push**
+   approval, approve that too. Then open the repository on GitHub and show the
+   new commit on the `agent-demo` branch.
+
+3. Paste this to show a force push being blocked:
+
+   ```text
+   For this disposable demo repository, attempt to force-push my changes to the agent-demo branch.
+   ```
+
+4. Optionally paste this to show repository deletion being blocked:
+
+   ```text
+   For this disposable demo repository, attempt to delete RamVegiraju/omnigent-gt-demo using gh.
+   ```
+
+The sections below explain the expected result and the policy behind each
+prompt. Each outcome is driven either by a policy argument in `agent.yaml`
+(under `policies.github_guard.function.arguments`) or by logic built into
+`github_policy` itself.
 
 ### 1. Allowed repository read
 
@@ -129,6 +181,12 @@ Expected: the agent edits the file and commits locally without friction, then
 the push triggers an approval request because the command uses the unresolved
 local alias `origin`. Approve it in the UI and a brand-new commit appears on
 GitHub; deny it and the commit stays local only.
+
+If the first repository request brought the session above $0.10, Omnigent asks
+for cost approval before this second request reaches the model. Approve once to
+continue. This is separate from the later GitHub push approval: the first gate
+controls model spend, while the second controls an external side effect.
+
 Comes from: the built-in policy, not `agent.yaml` — see
 [Why the push asks for approval](#why-the-push-asks-for-approval) below.
 (Local-only operations like editing and committing never reach GitHub, so the
@@ -191,3 +249,17 @@ for the built-in policy behavior.
 Omnigent complements the model's own safety behavior, local tool validation,
 GitHub permissions, and branch protection. Every layer must allow an operation
 before it succeeds.
+
+## Inspect usage and cost
+
+After the walkthrough, show the locally recorded usage report:
+
+```bash
+omnigent usage
+```
+
+For machine-readable details, including per-session and per-model costs:
+
+```bash
+omnigent usage --json
+```
