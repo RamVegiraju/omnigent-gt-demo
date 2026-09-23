@@ -3,6 +3,7 @@ description: Codex demo of Omnigent's built-in GitHub policy.
 
 executor:
   harness: codex
+  model: databricks-gpt-6-sol
 
 prompt: |
   You are a concise coding assistant working in this repository on branch

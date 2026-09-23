@@ -1,8 +1,8 @@
 # Omnigent GitHub Policy Demo
 
 A small, self-contained demonstration of [Omnigent](https://github.com/omnigent-ai/omnigent)'s
-built-in `github_policy`. A Codex agent (run through Omnigent's
-`codex` harness) uses the local `git` and `gh` CLIs through a
+built-in `github_policy`. A Codex agent (run through Omnigent's `codex`
+harness) uses the local `git` and `gh` CLIs through a
 policy-wrapped tool, allowing Omnigent to inspect each GitHub operation before
 it executes.
 
@@ -26,35 +26,31 @@ inside Omnigent.
 
 ## Executor
 
-The agent runs on the local Codex App Server harness:
+The agent runs on Omnigent's Codex harness:
 
 ```yaml
 executor:
   harness: codex
+  model: databricks-gpt-6-sol
 ```
 
-No `model` or `auth` block is declared. With no Codex provider default in
-Omnigent, the harness uses the local `codex` CLI configuration and cached
-ChatGPT login. This setup does not require a Databricks endpoint or profile.
-Omnigent starts a separate `codex app-server` process for each session and
-exposes the policy-wrapped function as a dynamic tool. You can switch models mid-session with the
-`/model` command. The full executor surface (harness names, `model`, and
-`auth` options including `api_key`, `databricks`, and `provider`) is
-documented in the
+The demo uses the `databricks-gpt-6-sol` model through the Databricks provider
+already configured in the local Codex CLI. On the demo machine, that provider
+targets `https://dbc-a5d4177a-49dc.cloud.databricks.com`. The full executor
+surface is documented in the
 [Agent YAML spec](https://github.com/omnigent-ai/omnigent/blob/main/docs/AGENT_YAML_SPEC.md).
 
 ## Prerequisites
 
-- Omnigent 0.13.0 or newer (`omnigent upgrade` to update)
+- Omnigent 0.15.0 or newer (`omnigent upgrade` to update)
 - GitHub CLI authenticated with access to this repository
-- The Codex CLI installed and signed in with ChatGPT (`codex login`)
+- Codex CLI configured with the `Databricks` provider for the `dbc-a5d…`
+  workspace
 
-If you have not authenticated the CLIs yet, run these once and complete
-the browser login flows. Choose ChatGPT when signing in to Codex:
+Authenticate GitHub if needed:
 
 ```bash
-gh auth login
-codex login
+gh auth login --hostname github.com
 ```
 
 Verify before starting the demo:
@@ -62,13 +58,8 @@ Verify before starting the demo:
 ```bash
 omnigent --version
 gh auth status
-codex login status     # should show "Logged in using ChatGPT"
+omnigent config list
 ```
-
-To use a different model or auth (for example a Databricks-hosted endpoint
-with `auth: {type: databricks, profile: <name>}`), add `executor.model` and
-`executor.auth` in `agent.yaml` per the
-[Agent YAML spec](https://github.com/omnigent-ai/omnigent/blob/main/docs/AGENT_YAML_SPEC.md).
 
 ## Start the server and agent
 
@@ -180,10 +171,8 @@ The agent's system prompt directs every git/gh operation through the narrow
 `shell_tools: [github_cli]` argument. This keeps the enforcement path
 harness-independent: the wrapper supports both Codex and `claude-sdk`.
 
-Codex authentication is documented in the
-[official OpenAI documentation](https://developers.openai.com/codex/auth).
-The implementation is in Omnigent's
-[`codex_executor.py`](https://github.com/omnigent-ai/omnigent/blob/main/omnigent/inner/codex_executor.py).
+Codex authenticates through the Databricks provider in the local Codex CLI
+configuration.
 
 ### Why the push asks for approval
 
